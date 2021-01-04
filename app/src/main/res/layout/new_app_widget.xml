@@ -1,0 +1,13 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/appwidget_text"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:padding="@dimen/widget_margin"
+    android:theme="@style/ThemeOverlay.WOLexample.AppWidgetContainer">
+
+    <ListView
+        android:id="@+id/appwidget_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</RelativeLayout>
