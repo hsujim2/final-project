@@ -9,6 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WOLexample">
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,6 +18,7 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="com.xylon.startServerApp" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

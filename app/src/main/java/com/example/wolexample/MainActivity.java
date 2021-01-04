@@ -4,6 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.annotation.SuppressLint;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -14,6 +18,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.potterhsu.Pinger;
@@ -34,6 +41,12 @@ public class MainActivity extends AppCompatActivity {
     CheckBox bw;
     Handler handler = new Handler();
     Integer times = 0;
+
+    ///c
+    private TextView tv_progress;
+    private LinearLayout ll_progress;
+    private ProgressBar progressBar2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +58,15 @@ public class MainActivity extends AppCompatActivity {
         handler.removeCallbacks(Timer);
         cancel_btn = findViewById(R.id.cancel_btn);
 
+        tv_progress = findViewById(R.id.conn_btn);
+        tv_progress = findViewById(R.id.tv_progress);
+        ll_progress = findViewById(R.id.ll_progress);
+        progressBar2 =findViewById(R.id.progressBar2);
+
+
         conn_btn.setOnClickListener(new View.OnClickListener() {
+            
+            ///c
             @Override
             public void onClick(View v) {
                 //Toast.makeText(MainActivity.this,"send wake package",Toast.LENGTH_SHORT).show();
@@ -54,6 +75,35 @@ public class MainActivity extends AppCompatActivity {
                 String[] temp2 = mac_edt.getText().toString().split("-");
                 String lip = ip_edt.getText().toString();
                 String lmac = mac_edt.getText().toString();
+
+                ///c
+                progressBar2.setProgress(0);
+                tv_progress.setText("0%");
+                ll_progress.setVisibility(View.VISIBLE);
+
+                new AsyncTask<Void, Integer,Boolean>(){
+                    @Override
+                    protected Boolean doInBackground(Void...voids){
+                        int progress = 0;
+                        while (progress <= 100){
+                            try {
+                                Thread.sleep(50);
+                                publishProgress(progress);
+                                progress++;
+                            }catch (InterruptedException e){
+                                e.printStackTrace();
+                            }
+                        }
+                        return  true;
+                    }
+                    @Override
+                    protected void onProgressUpdate(Integer...values){
+                        super.onProgressUpdate(values);
+                        progressBar2.setProgress(values[0]);
+                        tv_progress.setText(values[0] + "%");
+                    }
+                }.execute();
+
                 if(temp.length == 4 && temp2.length == 6){
                     int i = 0;
                     for(i=0;i<4;i++)
@@ -200,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
                 Looper.prepare();
                 openRDP();
                 Toast.makeText(MainActivity.this,"開機成功",Toast.LENGTH_LONG).show();
+                ll_progress.setVisibility(View.GONE);
                 handler.removeCallbacks(Timer);
                 Looper.loop();
                 pinger.cancel();
