@@ -189,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             ifOpened(ip_edt.getText().toString());
             handler.postDelayed(this,5000);
-
         }
     };
     protected void ifOpened(String ip){
