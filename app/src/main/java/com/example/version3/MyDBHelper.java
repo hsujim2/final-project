@@ -19,5 +19,5 @@ public class MyDBHelper extends SQLiteOpenHelper { //繼承SQL類別
     public void onUpgrade(SQLiteDatabase db, int oldVersion,int newVersion){
         db.execSQL("DROP TABLE IF EXISTS myTable");
         onCreate(db);
-    }//如果有新的SQL資料庫就將舊的刪掉並呼叫onCreate在創建新的一個資料庫
+    }//如果有新的SQL資料庫就將就得刪掉並呼叫onCreate在創建新的一個資料庫
 }

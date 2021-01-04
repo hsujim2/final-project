@@ -1,10 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-<<<<<<< HEAD
-    <style name="Theme.WOLexample" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-=======
     <style name="Theme.Version3" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
->>>>>>> origin/hong
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
@@ -17,15 +13,4 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-    <style name="ThemeOverlay.WOLexample.AppWidgetContainer" parent="">
-        <item name="appWidgetBackgroundColor">@color/light_blue_600</item>
-        <item name="appWidgetTextColor">@color/light_blue_50</item>
-    </style>
->>>>>>> origin/jeffery
-=======
->>>>>>> origin/hong
 </resources>

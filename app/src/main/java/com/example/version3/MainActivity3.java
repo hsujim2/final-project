@@ -43,14 +43,12 @@ public class MainActivity3 extends AppCompatActivity {
                     if (i != 4) {
                         Toast.makeText(MainActivity3.this, "請輸入正確的IP", Toast.LENGTH_LONG).show();
                     }
-                    else {
-                        //當broadcast有勾時，將ch設為1
+                    else {//當broadcast有勾時，將ch設為1
                         if (bw_cb.isChecked()) {
                             ch = 1;
                         } else {
                             ch = 0;
-                        }
-                        //判斷IP、mac是否為正確的格式
+                        }//判斷IP、mac是否為正確的格式
                         if (ip_edt.length() < 1 || mac_edt.length() < 1 || name_ed.length() < 1)
                             Toast.makeText(MainActivity3.this, "欄位請物留空", Toast.LENGTH_SHORT).show();
                         else {

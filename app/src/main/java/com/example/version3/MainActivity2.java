@@ -1,9 +1,11 @@
 package com.example.version3;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,7 +15,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -38,12 +43,12 @@ public class MainActivity2 extends AppCompatActivity {
     CheckBox bw;
     Handler handler = new Handler();
     Integer times = 0;
-    SQLiteDatabase dbrw; //建立MyDBHelper物件
+    private LinearLayout ll_progress;
+    SQLiteDatabase dbrw;
     ListView listView;
     ArrayAdapter<String> adapter;
-    ArrayList<String> items=new ArrayList<>(); //要放置在list裡的物件陣列
+    ArrayList<String> items=new ArrayList<>();
     FloatingActionButton add_btn;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,35 +59,30 @@ public class MainActivity2 extends AppCompatActivity {
         bw = findViewById(R.id.checkBox);
         handler.removeCallbacks(Timer);
         cancel_btn = findViewById(R.id.cancel_btn);
+        ll_progress = findViewById(R.id.ll_progress);
         add_btn=findViewById(R.id.btn_add);
         listView=findViewById(R.id.listView);
-
-        //一開始開啟時將database裡的資料匯入
-        //宣告Adapter，用simple_list_item_1連接到xml的listview，items目前是空的
         adapter=new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,items);
-        listView.setAdapter(adapter);//將adapter放入listview
-        dbrw=new MyDBHelper(this).getReadableDatabase();//取得在SQL裡的資料
+        listView.setAdapter(adapter);
+        dbrw=new MyDBHelper(this).getReadableDatabase();
 
-        Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);//查詢SQL裡的所有資料(*指全部的資料)
-        c.moveToFirst();//從第一筆開始查詢
-        items.clear();//清除items
+        Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);
+        c.moveToFirst();
+        items.clear();
         for(int i=0;i<c.getCount();i++){
             items.add("user:"+c.getString(0)+"\nIP:"+c.getString(1)+"\t\t\t\tmac:"+c.getString(2));
             c.moveToNext();
-        }//將SQL裡每筆的user、IP、MAC取出來組成一個字串，並放入items陣列
-        adapter.notifyDataSetChanged();//將新的items放入adapter(更新list)
-        c.close();//關閉查詢
+        }
+        adapter.notifyDataSetChanged();
+        c.close();
 
-        //如果有點擊listview中的資料時，將選到的資料填入IP_edt
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);//查詢SQL裡的所有資料(*指全部的資料)
-                c.moveToFirst();//從第一筆開始查詢
-                items.clear();//清除items
-                //position為選擇到的資料在list裡是第幾筆(從0開始數)
+                Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);
+                c.moveToFirst();
+                items.clear();
                 for(int i=0;i<c.getCount();i++){
-                    //每筆每筆對，如果i等於選擇到的位置後，將IP、mac放入edit_text中，並用Toast顯示
                     if(i==position) {
                         Toast.makeText(MainActivity2.this,"歡迎"+c.getString(0)+"使用",Toast.LENGTH_SHORT).show();
                         ip_edt.setText(c.getString(1));
@@ -108,16 +108,39 @@ public class MainActivity2 extends AppCompatActivity {
                 c.close();
             }
         });
-        conn_btn.setOnClickListener(new View.OnClickListener() {
+        conn_btn.setOnClickListener(new View.OnClickListener() {//連線的button
+            @SuppressLint("StaticFieldLeak")
             @Override
             public void onClick(View v) {
-                String[] temp = ip_edt.getText().toString().split("\\.");
-                String[] temp2 = mac_edt.getText().toString().split("-");
-                String lip = ip_edt.getText().toString();
-                String lmac = mac_edt.getText().toString();
-                if(temp.length == 4 && temp2.length == 6){
-                    int i = 0;
-                    for(i=0;i<4;i++)
+                String[] temp = ip_edt.getText().toString().split("\\.");//temp用於偵測IP是否符合要求
+                String[] temp2 = mac_edt.getText().toString().split("-");//temp2用於偵測MAC是否符合要求
+                String lip = ip_edt.getText().toString();//暫存IP位置
+                String lmac = mac_edt.getText().toString();//暫存MAC位置
+                ll_progress.setVisibility(View.VISIBLE);//顯示進度條
+                new AsyncTask<Void, Integer,Boolean>(){
+                    @Override
+                    protected Boolean doInBackground(Void...voids){
+                        int progress = 0;
+                        while (progress <= 100){
+                            try {
+                                Thread.sleep(50);
+                                publishProgress(progress);
+                                progress++;
+                            }catch (InterruptedException e){
+                                e.printStackTrace();
+                            }
+                        }
+                        return true;
+                    }
+                    @Override
+                    protected void onProgressUpdate(Integer...values){
+                        super.onProgressUpdate(values);
+                    }
+                }.execute();
+
+                if(temp.length == 4 && temp2.length == 6){//判斷IP長度跟MAC長度的正確性
+                    int i = 0;//先宣告i是因為在迴圈外也要用到
+                   for(i=0;i<4;i++)//如果大於255代表IP不合法
                         if(Integer.parseInt(temp[i]) >= 255)
                             break;
                     if(i == 4){//ip valid!!
@@ -127,9 +150,9 @@ public class MainActivity2 extends AppCompatActivity {
                         new WakeThread(lip,lmac).start();
                         if(bw.isChecked()) {
                             ifOpened(ip_edt.getText().toString());
-                            handler.postDelayed(Timer, 5000);
-                        }else{
-                            openRDP();
+                            handler.postDelayed(Timer, 5000);//5000意味著五秒一次
+                        }else{//不更改廣播IP(在外網呼叫，廣播IP必須透過NAT轉發時設定)
+                            openRDP();//直接打開RDP，因為不能被ping到
                             Toast.makeText(MainActivity2.this,"ping為icmp，不支援port fording，直接開啟RDP",Toast.LENGTH_SHORT).show();
                         }
                     }else
@@ -142,29 +165,27 @@ public class MainActivity2 extends AppCompatActivity {
         cancel_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                handler.removeCallbacks(Timer);
+                ll_progress.setVisibility(View.GONE);//取消進度條
+                handler.removeCallbacks(Timer);//取消ping
             }
         });
 
         add_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(new Intent(MainActivity2.this,MainActivity3.class),1);//切換Activity
+                startActivityForResult(new Intent(MainActivity2.this,MainActivity3.class),1);//切換到新增的頁面
             }
         });
-
     }
 
     //加入新資料後要做的事
-    protected  void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
         super.onActivityResult(requestCode,resultCode,data);
         if(requestCode==1) {
             if (resultCode == 101) {
-                // 更新items並放入list中
-                Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);//建立查詢
-                c.moveToFirst();//將查詢一致第一筆資料
-                items.clear();//清除items
-                //將更新後的資料庫內的資料提入items
+                Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);
+                c.moveToFirst();
+                items.clear();
                 for(int i=0;i<c.getCount();i++){
                     items.add("user:"+c.getString(0)+"\nIP:"+c.getString(1)+"\t\t\t\tmac:"+c.getString(2));
                     c.moveToNext();
@@ -174,26 +195,27 @@ public class MainActivity2 extends AppCompatActivity {
             }
         }
     }
-    private Runnable Timer = new Runnable() {
+    private Runnable Timer = new Runnable() {//用於計時，本程式在發送開機封包後會測試十次ping，每次5s，現在的電腦都能在50s內完成開機
         @Override
         public void run() {
             ifOpened(ip_edt.getText().toString());
             handler.postDelayed(this,5000);
-
         }
     };
-    protected void ifOpened(String ip){
-        Pinger pinger = new Pinger();
+    protected void ifOpened(String ip){//使用ping測試電腦是否開機成功
+        Pinger pinger = new Pinger();//pinger是別人寫好的程式，其實程式內很簡單，也能自己寫
+        //但要寫成可以include的東西有點困難，反正他寫好了我就override，用他的類別就好
         pinger.setOnPingListener(new Pinger.OnPingListener() {
             @Override
-            public void onPingSuccess() {
-                finish = true;
-                Looper.prepare();
+            public void onPingSuccess() {//他定義好的ping成功情形
+                finish = true;//設為true用於後面判斷
+                Looper.prepare();//要使用這條指令才能在thread中設定變數、使用toast
                 openRDP();
                 Toast.makeText(MainActivity2.this,"開機成功",Toast.LENGTH_LONG).show();
-                handler.removeCallbacks(Timer);
-                Looper.loop();
-                pinger.cancel();
+                ll_progress.setVisibility(View.GONE);//隱藏進度條
+                handler.removeCallbacks(Timer);//停止計時
+                Looper.loop();//使用完要讓它繼續迴圈
+                pinger.cancel();//馬上取消ping，雖然不這麼做也沒差，但之前遇過問題
             }
             @Override
             public void onPingFailure() {

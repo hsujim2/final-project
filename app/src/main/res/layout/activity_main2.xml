@@ -82,16 +82,13 @@
 
     <ListView
         android:id="@+id/listView"
-        android:layout_width="395dp"
-        android:layout_height="460dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_width="366dp"
+        android:layout_height="478dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/linearlayout3" />
+        app:layout_constraintTop_toBottomOf="@+id/linearlayout3"
+        app:layout_constraintVertical_bias="0.304" />
 
     <LinearLayout
         android:id="@+id/linearlayout3"
@@ -121,6 +118,32 @@
             android:layout_weight="1"
             android:text="Cancel" />
 
+
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/ll_progress"
+        android:layout_width="371dp"
+        android:layout_height="400dp"
+        android:layout_marginTop="200dp"
+        android:layout_marginBottom="50dp"
+        android:background="#00FFFFFF"
+        android:clickable="true"
+        android:elevation="3dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.47000003">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#00FFFFFF" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
