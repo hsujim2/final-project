@@ -18,8 +18,7 @@ import static androidx.core.content.ContextCompat.startActivity;
  */
 public class NewAppWidget extends AppWidgetProvider {
     private static final String MyOnClick1 = "myOnClickTag1";//監聽事件用的
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId) {
+    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         MainActivity2.tools = Boolean.FALSE;//區分是否按下widget
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
         views.setOnClickPendingIntent(R.id.button, getPendingSelfIntent(context, MyOnClick1));//設定onclick
@@ -42,17 +41,14 @@ public class NewAppWidget extends AppWidgetProvider {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
     }
-
     @Override
     public void onEnabled(Context context) {
         // Enter relevant functionality for when the first widget is created
     }
-
     @Override
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
     }
-
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);

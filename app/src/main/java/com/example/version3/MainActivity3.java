@@ -27,7 +27,6 @@ public class MainActivity3 extends AppCompatActivity {
         bw_cb = findViewById(R.id.bw_cb);
         name_ed = findViewById(R.id.name_ed);
         dbrw=new MyDBHelper(this).getWritableDatabase();//將資料庫設為寫入模式
-
         //當ADD鍵按下後執行
         btn_add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,10 +73,8 @@ public class MainActivity3 extends AppCompatActivity {
                  //返回mainActivity2
                 setResult(101);
                 finish();
-
             }
         });
-
     }
     //關閉資料庫
     @Override

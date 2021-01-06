@@ -74,7 +74,6 @@ public class MainActivity2 extends AppCompatActivity {
         adapter=new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,items);
         listView.setAdapter(adapter);
         dbrw=new MyDBHelper(this).getReadableDatabase();
-
         Cursor c=dbrw.rawQuery("SELECT * FROM myTable",null);
         c.moveToFirst();
         items.clear();
@@ -100,8 +99,6 @@ public class MainActivity2 extends AppCompatActivity {
                 return true;
             }
         });
-
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -195,7 +192,6 @@ public class MainActivity2 extends AppCompatActivity {
                     Toast.makeText(MainActivity2.this,"請輸入正確的IP或MAC",Toast.LENGTH_LONG).show();
             }
         });
-
         cancel_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -203,7 +199,6 @@ public class MainActivity2 extends AppCompatActivity {
                 handler.removeCallbacks(Timer);//取消ping
             }
         });
-
         add_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -227,7 +222,6 @@ public class MainActivity2 extends AppCompatActivity {
         }
         c.close();
     }
-
     //加入新資料後要做的事
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data){
         super.onActivityResult(requestCode,resultCode,data);
@@ -245,22 +239,21 @@ public class MainActivity2 extends AppCompatActivity {
             }
         }
     }
-
     public static String executeRemoteCommand(String username,String password,String hostname,int port)throws Exception {
         JSch jsch = new JSch();
-        Session session = jsch.getSession(username, hostname, port);
+        Session session = jsch.getSession(username, hostname, port);//新增連線
         session.setPassword(password);
-        Properties prop = new Properties();
+        Properties prop = new Properties();//SSH連線
         prop.put("StrictHostKeyChecking", "no");
-        session.setConfig(prop);
-        session.connect();
+        session.setConfig(prop);//基礎設定
+        session.connect();//連線
         ChannelExec channelssh = (ChannelExec)
                 session.openChannel("exec");
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();//存放指令的變數
         channelssh.setOutputStream(baos);
-        channelssh.setCommand("etherwake -i br-lan 18:C0:4D:39:62:D4");
-        channelssh.connect();
-        channelssh.disconnect();
+        channelssh.setCommand("etherwake -i br-lan 18:C0:4D:39:62:D4");//開機指令
+        channelssh.connect();//傳送開機指令
+        channelssh.disconnect();//中斷連接
         return baos.toString();
     }
     private Runnable Timer = new Runnable() {//用於計時，本程式在發送開機封包後會測試十次ping，每次5s，現在的電腦都能在50s內完成開機
@@ -306,8 +299,6 @@ public class MainActivity2 extends AppCompatActivity {
         startActivity(activityIntent);
     }
 }
-
-
 class WakeThread extends Thread{
     String ip = null;
     String macAddr = null;
