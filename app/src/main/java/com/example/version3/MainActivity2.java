@@ -25,8 +25,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 import com.potterhsu.Pinger;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -34,6 +38,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.TimerTask;
 
 public class MainActivity2 extends AppCompatActivity {
@@ -112,10 +117,6 @@ public class MainActivity2 extends AppCompatActivity {
             @SuppressLint("StaticFieldLeak")
             @Override
             public void onClick(View v) {
-                String[] temp = ip_edt.getText().toString().split("\\.");//temp用於偵測IP是否符合要求
-                String[] temp2 = mac_edt.getText().toString().split("-");//temp2用於偵測MAC是否符合要求
-                String lip = ip_edt.getText().toString();//暫存IP位置
-                String lmac = mac_edt.getText().toString();//暫存MAC位置
                 ll_progress.setVisibility(View.VISIBLE);//顯示進度條
                 new AsyncTask<Void, Integer,Boolean>(){
                     @Override
@@ -137,7 +138,10 @@ public class MainActivity2 extends AppCompatActivity {
                         super.onProgressUpdate(values);
                     }
                 }.execute();
-
+                String[] temp = ip_edt.getText().toString().split("\\.");//temp用於偵測IP是否符合要求
+                String[] temp2 = mac_edt.getText().toString().split("-");//temp2用於偵測MAC是否符合要求
+                String lip = ip_edt.getText().toString();//暫存IP位置
+                String lmac = mac_edt.getText().toString();//暫存MAC位置
                 if(temp.length == 4 && temp2.length == 6){//判斷IP長度跟MAC長度的正確性
                     int i = 0;//先宣告i是因為在迴圈外也要用到
                    for(i=0;i<4;i++)//如果大於255代表IP不合法
@@ -152,6 +156,17 @@ public class MainActivity2 extends AppCompatActivity {
                             ifOpened(ip_edt.getText().toString());
                             handler.postDelayed(Timer, 5000);//5000意味著五秒一次
                         }else{//不更改廣播IP(在外網呼叫，廣播IP必須透過NAT轉發時設定)
+                            new AsyncTask<Integer, Void, Void>(){
+                                @Override
+                                protected Void doInBackground(Integer... integers) {
+                                    try {
+                                        executeRemoteCommand("root","zaq1@WSX",ip_edt.getText().toString(),22);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    return null;
+                                }
+                            }.execute(1);
                             openRDP();//直接打開RDP，因為不能被ping到
                             Toast.makeText(MainActivity2.this,"ping為icmp，不支援port fording，直接開啟RDP",Toast.LENGTH_SHORT).show();
                         }
@@ -195,6 +210,24 @@ public class MainActivity2 extends AppCompatActivity {
             }
         }
     }
+
+    public static String executeRemoteCommand(String username,String password,String hostname,int port)throws Exception {
+        JSch jsch = new JSch();
+        Session session = jsch.getSession(username, hostname, port);
+        session.setPassword(password);
+        Properties prop = new Properties();
+        prop.put("StrictHostKeyChecking", "no");
+        session.setConfig(prop);
+        session.connect();
+        ChannelExec channelssh = (ChannelExec)
+                session.openChannel("exec");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        channelssh.setOutputStream(baos);
+        channelssh.setCommand("etherwake -i br-lan 18:C0:4D:39:62:D4");
+        channelssh.connect();
+        channelssh.disconnect();
+        return baos.toString();
+    }
     private Runnable Timer = new Runnable() {//用於計時，本程式在發送開機封包後會測試十次ping，每次5s，現在的電腦都能在50s內完成開機
         @Override
         public void run() {
@@ -223,59 +256,53 @@ public class MainActivity2 extends AppCompatActivity {
                 Toast.makeText(MainActivity2.this,"等待開機",Toast.LENGTH_SHORT).show();
                 times ++;
                 if(times >= 10){
-                    handler.removeCallbacks(Timer);
+                    handler.removeCallbacks(Timer);//大於十次取消計時，取消連接測試
                 }
                 Looper.loop();
             }
             @Override
             public void onPingFinish() {}
         });
-
         pinger.pingUntilSucceeded(ip,5000);
     }
     protected void openRDP(){
-        Intent activityIntent = new Intent();
+        Intent activityIntent = new Intent();//pkg名稱可用軟體查，也可以順便查出他預設啟動的activity名稱
         activityIntent.setComponent(new ComponentName("com.microsoft.rdc.androidx","com.microsoft.rdc.ui.activities.HomeActivity" ));
         startActivity(activityIntent);
     }
-    public class MyTimerTask extends TimerTask
-    {
-        public void run()
-        {
-        }
-    };
 }
 
 
 class WakeThread extends Thread{
     String ip = null;
     String macAddr = null;
-    public WakeThread(String ip,String macAddr){
+    public WakeThread(String ip,String macAddr){//設定初值
         this.ip = ip;
         this.macAddr = macAddr;
     }
     @Override
     public void run() {
         super.run();
-        wakeOnLan(ip,macAddr);
+        wakeOnLan(ip,macAddr);//呼叫自己
     }
     public void wakeOnLan(String ip,String macAddr){
         DatagramSocket datagramSocket = null;
         try {//magic packet有特殊規格，使用UDP port 進行廣播
             byte[] mac = getMacBytes(macAddr);
-            byte[] magic = new byte[6+16*mac.length];
+            byte[] magic = new byte[6+16*mac.length];//愈傳送的封包
             //1.寫入六個FF
             for (int i=0;i<6;i++){
                 magic[i] = (byte)0xff;
             }
-            //2.寫入16次host MAC位置，當電腦收到屬於自己的MAC，會發送開機訊號
+            //2.寫入host MAC位置，當電腦收到屬於自己的MAC，會發送開機訊號
             for(int i=6;i<magic.length; i += mac.length){
-                System.arraycopy(mac,0,magic,i,mac.length);
+                System.arraycopy(mac,0,magic,i,mac.length);//複製輸入的MAC到愈發送的封包中
             }
-            datagramSocket = new DatagramSocket();
+            datagramSocket = new DatagramSocket();//新增封包
             DatagramPacket datagramPacket = new DatagramPacket(magic,magic.length, InetAddress.getByName(ip),8888);
+            //傳送封包，以UDP 8888 port傳送，這個port可以亂設定，只要不要是常用的port不會衝突就好。(封包,封包長度,IP,port)
             datagramSocket.send(datagramPacket);
-        } catch (SocketException e) {
+        } catch (SocketException e) {//各種例外情況
             e.printStackTrace();
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -283,21 +310,18 @@ class WakeThread extends Thread{
             e.printStackTrace();
         } finally {
             if(datagramSocket != null)
-                datagramSocket.close();
+                datagramSocket.close();//傳送完成需要關閉
         }
     }
-    private byte[] getMacBytes(String macStr) throws IllegalArgumentException {
+    private byte[] getMacBytes(String macStr) throws IllegalArgumentException {//用於將mac位置拆開，從原本的字串拆成六組十六進制
         byte[] bytes = new byte[6];
-        String[] hex = macStr.split("(\\:|\\-)");
-        if (hex.length != 6) {
-            throw new IllegalArgumentException("Invalid MAC address.");
-        }
+        String[] hex = macStr.split("(\\:|\\-)");//以-作為拆分符號，前面已經判斷過是不是合法的了，這邊不在重複判斷
         try {
             for (int i = 0; i < 6; i++) {
-                bytes[i] = (byte) Integer.parseInt(hex[i], 16);
+                bytes[i] = (byte) Integer.parseInt(hex[i], 16);//轉成16進制
             }
         }
-        catch (NumberFormatException e) {
+        catch (NumberFormatException e) {//如果轉換十六進制失敗，代表內容不是十六進制，所以轉換失敗
             throw new IllegalArgumentException("Invalid hex digit in MAC address.");
         }
         return bytes;
