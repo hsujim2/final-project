@@ -66,18 +66,19 @@
             android:id="@+id/ip_edt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
-            android:textColor="@android:color/black"
+            android:layout_weight="5"
             android:hint="host ip address"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:textColor="@android:color/black" />
 
         <CheckBox
             android:id="@+id/bw_cb"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/black"
-            android:text="Broadcast" />
+            android:checked="true"
+            android:text="Broadcast"
+            android:textColor="@android:color/black" />
     </LinearLayout>
 
     <LinearLayout

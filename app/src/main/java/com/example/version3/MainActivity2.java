@@ -2,7 +2,9 @@ package com.example.version3;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -22,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -45,6 +48,7 @@ public class MainActivity2 extends AppCompatActivity {
     EditText ip_edt,mac_edt;
     Button conn_btn,cancel_btn;
     Boolean finish = false;
+    public static Boolean tools;
     CheckBox bw;
     Handler handler = new Handler();
     Integer times = 0;
@@ -75,11 +79,28 @@ public class MainActivity2 extends AppCompatActivity {
         c.moveToFirst();
         items.clear();
         for(int i=0;i<c.getCount();i++){
-            items.add("user:"+c.getString(0)+"\nIP:"+c.getString(1)+"\t\t\t\tmac:"+c.getString(2));
+            items.add("user:"+c.getString(0)+"\tIP:"+c.getString(1)+"\tmac:"+c.getString(2));
             c.moveToNext();
         }
         adapter.notifyDataSetChanged();
-        c.close();
+        //c.close();
+        ll_progress.setVisibility(View.GONE);//取消進度條
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> arg0, View v,
+                                           int index, long arg3) {
+                new AlertDialog.Builder(MainActivity2.this)
+                        .setTitle("要設定為小工具預設嗎？")
+                        .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {//按下positiveBtn更改預設值
+                                SharedPreferences pref = getSharedPreferences("default_computer", MODE_PRIVATE);
+                                pref.edit().putInt("def",index).apply();//這兩行在儲存永久變數
+                            }
+                        }).setNegativeButton("cancel",null).create().show();
+                return true;
+            }
+        });
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -106,7 +127,7 @@ public class MainActivity2 extends AppCompatActivity {
                 c.moveToFirst();
                 items.clear();
                 for(int i=0;i<c.getCount();i++){
-                    items.add("user:"+c.getString(0)+"\nIP:"+c.getString(1)+"\t\t\t\tmac:"+c.getString(2));
+                    items.add("user:"+c.getString(0)+"\tIP:"+c.getString(1)+"\tmac:"+c.getString(2));
                     c.moveToNext();
                 }
                 adapter.notifyDataSetChanged();
@@ -156,14 +177,12 @@ public class MainActivity2 extends AppCompatActivity {
                             ifOpened(ip_edt.getText().toString());
                             handler.postDelayed(Timer, 5000);//5000意味著五秒一次
                         }else{//不更改廣播IP(在外網呼叫，廣播IP必須透過NAT轉發時設定)
+                            ///////////////使用SSH下指令///////////////////
                             new AsyncTask<Integer, Void, Void>(){
                                 @Override
                                 protected Void doInBackground(Integer... integers) {
-                                    try {
-                                        executeRemoteCommand("root","zaq1@WSX",ip_edt.getText().toString(),22);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
+                                    try { executeRemoteCommand("root","zaq1@WSX",ip_edt.getText().toString(),22);
+                                    } catch (Exception e) { e.printStackTrace(); }
                                     return null;
                                 }
                             }.execute(1);
@@ -191,6 +210,22 @@ public class MainActivity2 extends AppCompatActivity {
                 startActivityForResult(new Intent(MainActivity2.this,MainActivity3.class),1);//切換到新增的頁面
             }
         });
+        if(tools != null){
+            if(tools){
+                c.moveToPosition(getSharedPreferences
+                        ("default_computer",MODE_PRIVATE)
+                        .getInt("def",0));
+                tools = false;
+                ip_edt.setText(c.getString(1));
+                mac_edt.setText(c.getString(2));
+                if(c.getInt(3)==1)
+                    bw.setChecked(true);
+                else
+                    bw.setChecked(false);
+                conn_btn.performClick();
+            }
+        }
+        c.close();
     }
 
     //加入新資料後要做的事
@@ -202,7 +237,7 @@ public class MainActivity2 extends AppCompatActivity {
                 c.moveToFirst();
                 items.clear();
                 for(int i=0;i<c.getCount();i++){
-                    items.add("user:"+c.getString(0)+"\nIP:"+c.getString(1)+"\t\t\t\tmac:"+c.getString(2));
+                    items.add("user:"+c.getString(0)+"\tIP:"+c.getString(1)+"\tmac:"+c.getString(2));
                     c.moveToNext();
                 }
                 adapter.notifyDataSetChanged();//將items寫入adapter
@@ -245,7 +280,7 @@ public class MainActivity2 extends AppCompatActivity {
                 Looper.prepare();//要使用這條指令才能在thread中設定變數、使用toast
                 openRDP();
                 Toast.makeText(MainActivity2.this,"開機成功",Toast.LENGTH_LONG).show();
-                ll_progress.setVisibility(View.GONE);//隱藏進度條
+                //ll_progress.setVisibility(View.GONE);//隱藏進度條
                 handler.removeCallbacks(Timer);//停止計時
                 Looper.loop();//使用完要讓它繼續迴圈
                 pinger.cancel();//馬上取消ping，雖然不這麼做也沒差，但之前遇過問題

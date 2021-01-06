@@ -18,7 +18,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 startActivity(new Intent(MainActivity.this,MainActivity2.class));
-
             }
         };
         Timer timer=new Timer();
